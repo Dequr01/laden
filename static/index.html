@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Clinical & Medical Practice Lead Generator | LeadPulse</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, ::before, ::after {
+      box-shadow: none !important;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Flat custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Flat skeleton pulse */
+    @keyframes flatPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .skeleton-flat {
+      background-color: #e2e8f0;
+      animation: flatPulse 1.5s ease-in-out infinite;
+    }
+
+    /* Touch target guarantee for mobile */
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    .safe-area-bottom {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+    }
+
+    /* Active filter chip */
+    .active-chip {
+      background-color: #2563eb !important;
+      color: #ffffff !important;
+      border-color: #2563eb !important;
+    }
+
+    /* Custom scroller with modern standard & legacy fallback */
+    .scroller {
+      --scrollbar-thumb: #cbd5e1;
+      --scrollbar-track: #f8fafc;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+      scrollbar-width: thin;
+    }
+
+    @supports not (scrollbar-color: auto) {
+      .scroller::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .scroller::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 4px;
+      }
+      .scroller::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+      }
+    }
+
+    /* Flat toast slide */
+    @keyframes toastSlide {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .toast-flat {
+      animation: toastSlide 0.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex flex-col min-h-dvh">
+
+  <!-- Toast Notification Stack -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+  <!-- Top Navigation & Header -->
+  <header class="sticky top-0 z-30 bg-white border-b border-slate-200 text-slate-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-base sm:text-lg font-bold tracking-tight text-slate-900 truncate">LeadPulse</span>
+            <span class="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-50 text-blue-700 border border-blue-200">Clinical Leads</span>
+          </div>
+          <p class="text-xs text-slate-500 truncate hidden xs:block">US CMS NPI Healthcare Outreach Engine</p>
+        </div>
+      </div>
+
+      <!-- Header Status Badges & Mobile Filter Toggle -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Live NPI status -->
+        <div class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>CMS NPI Connected</span>
+        </div>
+
+        <!-- AI badge -->
+        <div id="headerAiBadge" class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          <span>OpenAI Ready</span>
+        </div>
+
+        <!-- Mobile Filter Toggle Button -->
+        <button id="mobileFilterToggleBtn" class="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 transition active:bg-slate-300 touch-target">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          <span id="mobileFilterBtnText">Filters</span>
+          <span id="mobileSelectedCountBadge" class="w-5 h-5 rounded bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center">7</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Page Body Container -->
+  <div class="flex-1 bg-slate-100 flex flex-col">
+    <div class="max-w-7xl w-full mx-auto p-3 sm:p-5 lg:p-6 flex-1 flex flex-col">
+
+      <!-- Flat Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 flex-1">
+
+        <!-- Left Controls / Filter Panel -->
+        <aside id="controlsPanel" class="lg:col-span-4 flex flex-col gap-4 hidden lg:flex">
+
+          <!-- Target Location Card -->
+          <div class="bg-white rounded-lg p-5 border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs border border-blue-200">1</span>
+                <h2 class="text-sm font-bold text-slate-800 tracking-tight">Target Location & Scope</h2>
+              </div>
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Geography</span>
+            </div>
+
+            <!-- State Select -->
+            <div>
+              <label for="stateSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Target State
+              </label>
+              <div class="relative">
+                <select id="stateSelect" class="w-full appearance-none bg-white border border-slate-300 hover:border-slate-400 rounded-lg px-3.5 py-2.5 pr-10 text-sm font-semibold text-slate-800 focus:border-blue-600 focus:outline-none transition">
+                  <!-- Dynamically populated -->
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>High disposable income medical markets</span>
+              </p>
+            </div>
+
+            <!-- Leads Per Specialty -->
+            <div>
+              <label for="limitSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Leads per Specialty
+              </label>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="limitSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Leads per Specialty
+                </label>
+                <span id="effectiveLimitBadge" class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">10 / spec</span>
+              </div>
+              <div class="relative">
+                <select id="limitSelect" class="w-full appearance-none bg-white border border-slate-300 hover:border-slate-400 rounded-lg px-3.5 py-2.5 pr-10 text-sm font-semibold text-slate-800 focus:border-blue-600 focus:outline-none transition">
+                  <option value="5">5 leads per specialty (Quick Sample)</option>
+                  <option value="10" selected>10 leads per specialty (Balanced)</option>
+                  <option value="20">20 leads per specialty (Deep Reach)</option>
+                  <option value="50">50 leads per specialty (Full Territory)</option>
+                  <option value="100">100 leads per specialty (High Volume)</option>
+                  <option value="custom">Custom count (Enter exact number)...</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Custom Number Input Container -->
+              <div id="customLimitContainer" class="hidden mt-2 p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label for="customLimitInput" class="text-xs font-bold text-slate-700">
+                    Exact Lead Count:
+                  </label>
+                  <span class="text-[10px] text-slate-500">1 – 250 per specialty</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="decrementLimitBtn" class="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-sm transition touch-target">
+                    -
+                  </button>
+                  <input type="number" id="customLimitInput" min="1" max="250" value="15" class="flex-1 bg-white border border-slate-300 hover:border-slate-400 focus:border-blue-600 rounded-lg px-3 py-1.5 text-center text-sm font-bold text-slate-900 focus:outline-none transition">
+                  <button type="button" id="incrementLimitBtn" class="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-sm transition touch-target">
+                    +
+                  </button>
+                </div>
+                <!-- Quick Preset Pills for Custom -->
+                <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span class="text-[10px] font-semibold text-slate-500">Quick:</span>
+                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="15">15</button>
+                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="25">25</button>
+                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="75">75</button>
+                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="150">150</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Script Enrichment Toggle -->
+            <div class="pt-2 border-t border-slate-200">
+              <label class="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                <input type="checkbox" id="aiEnrichToggle" class="w-4 h-4 mt-0.5 text-blue-600 rounded border-slate-300 focus:ring-0 focus:outline-none cursor-pointer">
+                <div class="flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-800">AI Front-Desk Calling Scripts</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">OpenAI</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5 leading-snug">
+                    Generate customized 2-sentence front-desk opening scripts targeting specialty billing pain points.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Filter Out Previously Shown Leads Toggle -->
+            <div class="pt-2 border-t border-slate-200">
+              <label class="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                <input type="checkbox" id="excludeShownToggle" checked class="w-4 h-4 mt-0.5 text-blue-600 rounded border-slate-300 focus:ring-0 focus:outline-none cursor-pointer">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-xs font-bold text-slate-800">Filter Out Shown Leads</span>
+                    <span id="shownHistoryCountBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">0 Seen</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5 leading-snug">
+                    Automatically skips healthcare providers you have already fetched and viewed.
+                  </p>
+                  <div class="pt-1">
+                    <button type="button" id="clearShownHistoryBtn" class="text-[11px] text-blue-600 hover:text-blue-800 font-semibold hover:underline">
+                      Reset seen history
+                    </button>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Specialties Multi-Select Card -->
+          <div class="bg-white rounded-lg p-5 border border-slate-200 flex flex-col space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs border border-blue-200">2</span>
+                <h2 class="text-sm font-bold text-slate-800 tracking-tight">Clinical Specialties</h2>
+              </div>
+              <span id="selectedCountBadge" class="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                7 Selected
+              </span>
+            </div>
+
+            <!-- Quick Preset Buttons -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button type="button" id="selectAllBtn" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition">
+                All
+              </button>
+              <button type="button" id="selectSurgicalBtn" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition">
+                Surgical & ASC
+              </button>
+              <button type="button" id="selectDiagnosticBtn" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition">
+                Diagnostic
+              </button>
+              <button type="button" id="clearAllBtn" class="px-2.5 py-1 text-xs font-semibold rounded text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition ml-auto">
+                Clear
+              </button>
+            </div>
+
+            <!-- Specialties Scrollable List -->
+            <div id="specialtiesList" class="space-y-2 max-h-80 sm:max-h-96 overflow-y-auto pr-1">
+              <!-- Dynamically populated checkboxes -->
+            </div>
+          </div>
+
+          <!-- Action Button Desktop -->
+          <button id="searchBtn" class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition text-white font-bold rounded-lg flex items-center justify-center gap-2.5 text-base touch-target cursor-pointer border border-blue-700">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <span id="searchBtnText">Generate Clinical Leads</span>
+          </button>
+
+        </aside>
+
+        <!-- Right Results Panel -->
+        <main class="lg:col-span-8 flex flex-col gap-4 min-w-0">
+
+          <!-- Status & Export Bar -->
+          <div class="bg-white rounded-lg p-4 sm:p-5 border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight truncate" id="resultsCount">
+                  0 Leads Ready
+                </h2>
+                <span id="leadsPillBadge" class="hidden text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Ready
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5 truncate" id="resultsSubtext">
+                Select your target state & specialties, then click Generate.
+              </p>
+            </div>
+
+            <!-- Export Buttons Group -->
+            <div class="flex items-center gap-2 shrink-0">
+              <!-- View Mode Toggle (Cards vs Table) -->
+              <div class="inline-flex rounded-lg p-0.5 bg-slate-100 border border-slate-300" role="group">
+                <button type="button" id="viewCardsBtn" title="Cards View" class="p-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs font-bold bg-white text-slate-900 border border-slate-200 flex items-center gap-1.5 transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  <span class="hidden sm:inline">Cards</span>
+                </button>
+                <button type="button" id="viewTableBtn" title="Table View" class="p-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 border border-transparent flex items-center gap-1.5 transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span class="hidden sm:inline">Table</span>
+                </button>
+              </div>
+
+              <!-- Excel Export -->
+              <button id="exportExcelBtn" disabled class="py-2 px-3 sm:px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold rounded-lg border border-emerald-700 transition flex items-center gap-1.5 touch-target">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Excel</span>
+              </button>
+
+              <!-- CSV Export -->
+              <button id="exportCsvBtn" disabled class="py-2 px-3 sm:px-4 bg-slate-700 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold rounded-lg border border-slate-800 transition flex items-center gap-1.5 touch-target">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                <span>CSV</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Quick Metrics Bar (Visible when leads > 0) -->
+          <div id="metricsBar" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Total Leads</span>
+              <span id="metricTotal" class="text-lg font-bold text-slate-900">0</span>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Verified Phone</span>
+              <span id="metricPhones" class="text-lg font-bold text-emerald-600">0</span>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Specialties</span>
+              <span id="metricSpecs" class="text-lg font-bold text-blue-600">0</span>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Facilities / Orgs</span>
+              <span id="metricFacilities" class="text-lg font-bold text-slate-700">0</span>
+            </div>
+          </div>
+
+          <!-- Search & Filter Controls Bar -->
+          <div id="filterBar" class="hidden bg-white p-3 rounded-lg border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+                <input type="text" id="quickFilter" placeholder="Filter by clinic name, city, phone, NPI, or contact person..." class="w-full bg-white border border-slate-300 hover:border-slate-400 rounded-lg pl-9 pr-8 py-2 text-xs sm:text-sm font-medium focus:outline-none focus:border-blue-600 transition">
+                <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Target State Results Filter Dropdown -->
+              <select id="stateFilter" class="bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-600">
+                <option value="ALL">All States</option>
+              </select>
+
+              <!-- Status filter dropdown (Called vs Not Called) -->
+              <select id="callStatusFilter" class="bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-600">
+                <option value="ALL">All Statuses</option>
+                <option value="NEW">To Call</option>
+                <option value="CALLED">Spoke / Contacted</option>
+                <option value="CALLBACK">Callback</option>
+                <option value="DEMO">Demo Booked</option>
+                <option value="SKIP">Not Interested</option>
+              </select>
+
+              <!-- Hide Shown Leads Checkbox Filter in Results Bar -->
+              <label class="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg px-2.5 py-2 select-none hover:bg-slate-50 transition shrink-0">
+                <input type="checkbox" id="hideShownResultsToggle" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-0 cursor-pointer">
+                <span>Hide Shown</span>
+                <span id="hiddenShownCountBadge" class="hidden text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold">0</span>
+              </label>
+            </div>
+
+            <!-- Dynamic Specialty Filter Chips -->
+            <div id="specialtyChipsContainer" class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <!-- Dynamically populated chips -->
+            </div>
+          </div>
+
+          <!-- Loading Skeleton Indicator -->
+          <div id="loadingIndicator" class="hidden space-y-3">
+            <div class="bg-white p-6 rounded-lg border border-slate-200 text-center space-y-3">
+              <div class="inline-flex items-center justify-center w-10 h-10 rounded bg-blue-50 text-blue-600 border border-blue-200">
+                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-slate-800" id="loadingStageTitle">Querying CMS NPI Database...</h3>
+              <p class="text-xs text-slate-500 max-w-md mx-auto" id="loadingDetails">
+                Fetching verified healthcare practices and compiling custom cold-call opening scripts.
+              </p>
+            </div>
+
+            <!-- Flat placeholder cards -->
+            <div class="space-y-3">
+              <div class="bg-white p-5 rounded-lg border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
+                  <div class="h-4 w-1/3 skeleton-flat rounded"></div>
+                  <div class="h-6 w-24 skeleton-flat rounded"></div>
+                </div>
+                <div class="h-5 w-2/3 skeleton-flat rounded"></div>
+                <div class="h-3 w-1/2 skeleton-flat rounded"></div>
+                <div class="h-12 w-full skeleton-flat rounded"></div>
+              </div>
+              <div class="bg-white p-5 rounded-lg border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
+                  <div class="h-4 w-1/4 skeleton-flat rounded"></div>
+                  <div class="h-6 w-24 skeleton-flat rounded"></div>
+                </div>
+                <div class="h-5 w-1/2 skeleton-flat rounded"></div>
+                <div class="h-3 w-1/3 skeleton-flat rounded"></div>
+                <div class="h-12 w-full skeleton-flat rounded"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div id="emptyState" class="bg-white p-8 sm:p-12 rounded-lg border border-slate-200 text-center space-y-4">
+            <div class="w-14 h-14 mx-auto bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center border border-blue-200">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+            </div>
+            <div class="max-w-md mx-auto space-y-1">
+              <h3 class="text-base font-bold text-slate-800">No Leads Loaded Yet</h3>
+              <p class="text-xs sm:text-sm text-slate-500">
+                Pick your target state and clinical specialties, then click <strong class="text-blue-600">Generate Clinical Leads</strong> to retrieve real providers.
+              </p>
+            </div>
+            <div class="pt-2">
+              <button type="button" id="emptyStateSearchBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-lg border border-blue-700 transition touch-target">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Run Quick Search (Massachusetts)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Leads Card View Container (Card Wrapper with Scroller) -->
+          <div id="leadsCardWrapper" class="hidden bg-white rounded-lg border border-slate-200 overflow-hidden flex flex-col">
+            <!-- Scroller Card Header -->
+            <div class="px-4 py-2.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800">Lead Directory Cards</span>
+                <span id="scrollerCountBadge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                  0 Leads
+                </span>
+              </div>
+              <button type="button" id="scrollToTopBtn" class="text-slate-500 hover:text-slate-800 font-semibold inline-flex items-center gap-1 transition">
+                <span>Top</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+              </button>
+            </div>
+
+            <!-- Scrollable Lead Cards List -->
+            <div id="leadsList" class="p-3 sm:p-4 space-y-3 overflow-y-auto max-h-[calc(100dvh-320px)] lg:max-h-[680px] scroller bg-slate-50/50">
+              <!-- Dynamically populated lead cards -->
+            </div>
+          </div>
+
+          <!-- Leads Table View Container (Hidden by default) -->
+          <div id="leadsTableContainer" class="hidden bg-white rounded-lg border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto max-h-[calc(100dvh-320px)] lg:max-h-[680px] overflow-y-auto scroller">
+              <table class="w-full text-left text-xs">
+                <thead class="sticky top-0 z-10 bg-slate-50 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th scope="col" class="py-2.5 px-3">Status</th>
+                    <th scope="col" class="py-2.5 px-3">Clinic / Practice</th>
+                    <th scope="col" class="py-2.5 px-3">Specialty</th>
+                    <th scope="col" class="py-2.5 px-3">Phone</th>
+                    <th scope="col" class="py-2.5 px-3">Decision Maker</th>
+                    <th scope="col" class="py-2.5 px-3">Location</th>
+                    <th scope="col" class="py-2.5 px-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="leadsTableBody" class="divide-y divide-slate-200 text-slate-700">
+                  <!-- Dynamically populated rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </main>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Mobile Floating / Sticky Bottom Bar -->
+  <div class="lg:hidden sticky bottom-0 z-20 bg-white border-t border-slate-300 p-3 safe-area-bottom">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <span id="mobileSummaryText" class="text-xs font-bold text-slate-900 truncate block">
+          Ready to search
+        </span>
+        <span class="text-[11px] text-slate-500">Tap to run search or change state</span>
+      </div>
+      <button id="mobileActionSearchBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-lg flex items-center gap-2 shrink-0 touch-target transition border border-blue-700">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <span>Generate Leads</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // App State
+    let availableConfig = { states: [], specialties: {} };
+    let currentLeads = [];
+    let filteredLeads = [];
+    let activeSpecialtyFilter = 'ALL';
+    let currentViewMode = 'cards'; // 'cards' or 'table'
+    const STORAGE_STATUS_KEY = 'leadpulse_lead_statuses_v1';
+    let leadStatuses = {};
+
+    // Load saved statuses from localStorage
+    try {
+      leadStatuses = JSON.parse(localStorage.getItem(STORAGE_STATUS_KEY) || '{}');
+    } catch (e) {
+      leadStatuses = {};
+    }
+
+    function saveLeadStatus(npi, status) {
+      leadStatuses[npi] = status;
+      try {
+        localStorage.setItem(STORAGE_STATUS_KEY, JSON.stringify(leadStatuses));
+      } catch (e) {}
+    }
+
+    // Shown NPIs Tracking & Persistence
+    const STORAGE_SHOWN_KEY = 'leadpulse_shown_npis_v1';
+    let shownNpis = new Set();
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_SHOWN_KEY) || '[]');
+      if (Array.isArray(saved)) {
+        shownNpis = new Set(saved.map(n => String(n).trim()));
+      }
+    } catch (e) {
+      shownNpis = new Set();
+    }
+
+    function saveShownNpi(npi) {
+      if (!npi) return;
+      shownNpis.add(String(npi).trim());
+      try {
+        localStorage.setItem(STORAGE_SHOWN_KEY, JSON.stringify(Array.from(shownNpis)));
+      } catch (e) {}
+      updateShownBadges();
+    }
+
+    function updateShownBadges() {
+      const shownBadge = document.getElementById('shownHistoryCountBadge');
+      if (shownBadge) {
+        shownBadge.textContent = `${shownNpis.size} Seen`;
+      }
+    }
+
+    // DOM Elements
+    const stateSelect = document.getElementById('stateSelect');
+    const limitSelect = document.getElementById('limitSelect');
+    const customLimitContainer = document.getElementById('customLimitContainer');
+    const customLimitInput = document.getElementById('customLimitInput');
+    const effectiveLimitBadge = document.getElementById('effectiveLimitBadge');
+    const decrementLimitBtn = document.getElementById('decrementLimitBtn');
+    const incrementLimitBtn = document.getElementById('incrementLimitBtn');
+    const aiEnrichToggle = document.getElementById('aiEnrichToggle');
+    const excludeShownToggle = document.getElementById('excludeShownToggle');
+    const shownHistoryCountBadge = document.getElementById('shownHistoryCountBadge');
+    const clearShownHistoryBtn = document.getElementById('clearShownHistoryBtn');
+    const hideShownResultsToggle = document.getElementById('hideShownResultsToggle');
+    const hiddenShownCountBadge = document.getElementById('hiddenShownCountBadge');
+    const specialtiesList = document.getElementById('specialtiesList');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const selectSurgicalBtn = document.getElementById('selectSurgicalBtn');
+    const selectDiagnosticBtn = document.getElementById('selectDiagnosticBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const selectedCountBadge = document.getElementById('selectedCountBadge');
+    const mobileSelectedCountBadge = document.getElementById('mobileSelectedCountBadge');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchBtnText = document.getElementById('searchBtnText');
+    const mobileActionSearchBtn = document.getElementById('mobileActionSearchBtn');
+    const emptyStateSearchBtn = document.getElementById('emptyStateSearchBtn');
+    const resultsCount = document.getElementById('resultsCount');
+    const resultsSubtext = document.getElementById('resultsSubtext');
+    const leadsPillBadge = document.getElementById('leadsPillBadge');
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const leadsCardWrapper = document.getElementById('leadsCardWrapper');
+    const scrollerCountBadge = document.getElementById('scrollerCountBadge');
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    const leadsList = document.getElementById('leadsList');
+    const leadsTableContainer = document.getElementById('leadsTableContainer');
+    const leadsTableBody = document.getElementById('leadsTableBody');
+    const viewCardsBtn = document.getElementById('viewCardsBtn');
+    const viewTableBtn = document.getElementById('viewTableBtn');
+    const emptyState = document.getElementById('emptyState');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const loadingStageTitle = document.getElementById('loadingStageTitle');
+    const filterBar = document.getElementById('filterBar');
+    const quickFilter = document.getElementById('quickFilter');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const stateFilter = document.getElementById('stateFilter');
+    const callStatusFilter = document.getElementById('callStatusFilter');
+    const specialtyChipsContainer = document.getElementById('specialtyChipsContainer');
+    const metricsBar = document.getElementById('metricsBar');
+    const metricTotal = document.getElementById('metricTotal');
+    const metricPhones = document.getElementById('metricPhones');
+    const metricSpecs = document.getElementById('metricSpecs');
+    const metricFacilities = document.getElementById('metricFacilities');
+    const toastContainer = document.getElementById('toastContainer');
+    const controlsPanel = document.getElementById('controlsPanel');
+    const mobileFilterToggleBtn = document.getElementById('mobileFilterToggleBtn');
+    const mobileFilterBtnText = document.getElementById('mobileFilterBtnText');
+    const mobileSummaryText = document.getElementById('mobileSummaryText');
+
+    // Toast Notification Utility (Flat Design)
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      const border = type === 'success' ? 'border-emerald-600' :
+                     type === 'error' ? 'border-rose-600' :
+                     'border-blue-600';
+
+      const icon = type === 'success' ? 
+        `<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>` :
+        type === 'error' ?
+        `<svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>` :
+        `<svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+
+      toast.className = `bg-white pointer-events-auto p-3 rounded-lg border border-slate-300 border-l-4 ${border} flex items-center gap-2.5 text-xs sm:text-sm font-semibold toast-flat`;
+      toast.innerHTML = `
+        ${icon}
+        <span class="flex-1 text-slate-800">${escapeHtml(message)}</span>
+        <button class="text-slate-400 hover:text-slate-600" onclick="this.parentElement.remove()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      `;
+
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => toast.remove(), 200);
+      }, 3500);
+    }
+
+    // Copy to clipboard helper
+    async function copyToClipboard(text, successMessage) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.left = '-9999px';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          document.execCommand('copy');
+          textarea.remove();
+        }
+        showToast(successMessage, 'success');
+      } catch (err) {
+        showToast('Failed to copy to clipboard', 'error');
+      }
+    }
+
+    // Get currently active lead limit (preset or custom)
+    function getEffectiveLimit() {
+      if (!limitSelect) return 10;
+      if (limitSelect.value === 'custom') {
+        let val = parseInt(customLimitInput ? customLimitInput.value : '15', 10);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > 250) val = 250;
+        return val;
+      }
+      return parseInt(limitSelect.value, 10) || 10;
+    }
+
+    function updateLimitDisplay() {
+      const isCustom = limitSelect && limitSelect.value === 'custom';
+      if (customLimitContainer) {
+        customLimitContainer.classList.toggle('hidden', !isCustom);
+      }
+      const effective = getEffectiveLimit();
+      if (effectiveLimitBadge) {
+        effectiveLimitBadge.textContent = `${effective} / spec`;
+      }
+      updateSelectedSpecialtyCount();
+    }
+
+    // Update selected checkboxes count badge
+    function updateSelectedSpecialtyCount() {
+      const checkedCount = document.querySelectorAll('.spec-checkbox:checked').length;
+      const totalCount = Object.keys(availableConfig.specialties).length || 7;
+      selectedCountBadge.textContent = `${checkedCount} of ${totalCount} Selected`;
+      mobileSelectedCountBadge.textContent = checkedCount;
+
+      const selectedOption = stateSelect.options[stateSelect.selectedIndex];
+      const stateName = selectedOption?.value === 'ALL' ? 'All States' : (selectedOption?.text?.split(' ')[0] || 'MA');
+      mobileSummaryText.textContent = `${stateName} • ${checkedCount} Specialties • ${limitSelect.value}/spec`;
+      const limit = getEffectiveLimit();
+      mobileSummaryText.textContent = `${stateName} • ${checkedCount} Specialties • ${limit}/spec`;
+      if (effectiveLimitBadge) {
+        effectiveLimitBadge.textContent = `${limit} / spec`;
+      }
+    }
+
+    // Initialize application
+    async function init() {
+      try {
+        updateShownBadges();
+        const res = await fetch('/api/config');
+        availableConfig = await res.json();
+        
+        // Populate states
+        stateSelect.innerHTML = availableConfig.states.map(s => 
+          `<option value="${s.code}">${escapeHtml(s.name)}</option>`
+        ).join('');
+
+        // Populate specialties
+        specialtiesList.innerHTML = Object.entries(availableConfig.specialties).map(([key, item]) => `
+          <label class="group flex items-start gap-3 p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition">
+            <input type="checkbox" value="${key}" checked class="spec-checkbox w-4 h-4 mt-0.5 text-blue-600 rounded border-slate-300 focus:ring-0 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 transition truncate">${escapeHtml(item.label)}</span>
+              </div>
+              <span class="text-xs text-slate-500 leading-snug block line-clamp-2 mt-0.5">${escapeHtml(item.default_pain_point)}</span>
+            </div>
+          </label>
+        `).join('');
+
+        // Listen for checkbox changes
+        document.querySelectorAll('.spec-checkbox').forEach(cb => {
+          cb.addEventListener('change', updateSelectedSpecialtyCount);
+        });
+
+        updateSelectedSpecialtyCount();
+
+      } catch (err) {
+        console.error('Failed to load initial config:', err);
+        showToast('Failed to load application configuration', 'error');
+      }
+    }
+
+    // Specialty selection presets
+    selectAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.spec-checkbox').forEach(cb => cb.checked = true);
+      updateSelectedSpecialtyCount();
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.spec-checkbox').forEach(cb => cb.checked = false);
+      updateSelectedSpecialtyCount();
+    });
+
+    selectSurgicalBtn.addEventListener('click', () => {
+      const surgicalKeys = ['surgery_centers', 'orthopaedic', 'emergency_physicians'];
+      document.querySelectorAll('.spec-checkbox').forEach(cb => {
+        cb.checked = surgicalKeys.includes(cb.value);
+      });
+      updateSelectedSpecialtyCount();
+    });
+
+    selectDiagnosticBtn.addEventListener('click', () => {
+      const diagKeys = ['imaging_radiology', 'dialysis_specialty', 'neurology', 'behavioral_health'];
+      document.querySelectorAll('.spec-checkbox').forEach(cb => {
+        cb.checked = diagKeys.includes(cb.value);
+      });
+      updateSelectedSpecialtyCount();
+    });
+
+    stateSelect.addEventListener('change', updateSelectedSpecialtyCount);
+    limitSelect.addEventListener('change', updateSelectedSpecialtyCount);
+
+    // Limit select & Custom count controls
+    limitSelect.addEventListener('change', () => {
+      updateLimitDisplay();
+      if (limitSelect.value === 'custom' && customLimitInput) {
+        customLimitInput.focus();
+        customLimitInput.select();
+      }
+    });
+
+    if (customLimitInput) {
+      customLimitInput.addEventListener('input', () => {
+        updateLimitDisplay();
+      });
+    }
+
+    if (decrementLimitBtn && customLimitInput) {
+      decrementLimitBtn.addEventListener('click', () => {
+        let val = parseInt(customLimitInput.value, 10) || 15;
+        val = Math.max(1, val - 5);
+        customLimitInput.value = val;
+        updateLimitDisplay();
+      });
+    }
+
+    if (incrementLimitBtn && customLimitInput) {
+      incrementLimitBtn.addEventListener('click', () => {
+        let val = parseInt(customLimitInput.value, 10) || 15;
+        val = Math.min(250, val + 5);
+        customLimitInput.value = val;
+        updateLimitDisplay();
+      });
+    }
+
+    document.querySelectorAll('.preset-limit-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = parseInt(btn.getAttribute('data-val'), 10);
+        if (!isNaN(val) && customLimitInput) {
+          customLimitInput.value = val;
+          updateLimitDisplay();
+        }
+      });
+    });
+
+    // Mobile filter toggle
+    mobileFilterToggleBtn.addEventListener('click', () => {
+      const isHidden = controlsPanel.classList.contains('hidden');
+      if (isHidden) {
+        controlsPanel.classList.remove('hidden');
+        mobileFilterBtnText.textContent = 'Hide Filters';
+        controlsPanel.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        controlsPanel.classList.add('hidden');
+        mobileFilterBtnText.textContent = 'Filters';
+      }
+    });
+
+    // Main Lead Generation Search Action
+    async function executeSearch() {
+      const selectedState = stateSelect.value;
+      const limit = parseInt(limitSelect.value, 10);
+      const limit = getEffectiveLimit();
+      const aiEnrich = aiEnrichToggle.checked;
+      const selectedSpecialties = Array.from(document.querySelectorAll('.spec-checkbox:checked')).map(cb => cb.value);
+
+      if (selectedSpecialties.length === 0) {
+        showToast('Please select at least one specialty.', 'error');
+        return;
+      }
+
+      // UI state: Loading
+      searchBtn.disabled = true;
+      mobileActionSearchBtn.disabled = true;
+      searchBtn.classList.add('opacity-60', 'cursor-not-allowed');
+      searchBtnText.textContent = 'Querying NPPES...';
+      
+      loadingIndicator.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      filterBar.classList.add('hidden');
+      metricsBar.classList.add('hidden');
+      leadsList.innerHTML = '';
+      leadsTableBody.innerHTML = '';
+      leadsCardWrapper.classList.add('hidden');
+      leadsTableContainer.classList.add('hidden');
+
+      resultsCount.textContent = 'Searching CMS Registry...';
+      resultsSubtext.textContent = `Querying official provider database for ${selectedState}...`;
+      loadingStageTitle.textContent = 'Querying US CMS NPI Database...';
+
+      // On mobile, collapse the filter panel automatically
+      if (window.innerWidth < 1024) {
+        controlsPanel.classList.add('hidden');
+        mobileFilterBtnText.textContent = 'Filters';
+      }
+
+      try {
+        const excludeShown = excludeShownToggle ? excludeShownToggle.checked : true;
+        const previouslySeenSnapshot = new Set(shownNpis);
+
+        const response = await fetch('/api/leads/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            state: selectedState,
+            specialties: selectedSpecialties,
+            limit_per_specialty: limit,
+            ai_enrich: aiEnrich,
+            exclude_npis: excludeShown ? Array.from(shownNpis) : []
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        currentLeads = data.leads || [];
+
+        // Check if lead was previously seen and persist to shown set
+        currentLeads.forEach(lead => {
+          const npiStr = String(lead.npi || '').trim();
+          lead.is_previously_shown = previouslySeenSnapshot.has(npiStr);
+          saveShownNpi(npiStr);
+        });
+
+        filteredLeads = [...currentLeads];
+
+        activeSpecialtyFilter = 'ALL';
+        quickFilter.value = '';
+        callStatusFilter.value = 'ALL';
+
+        buildSpecialtyFilterChips();
+        buildStateFilterOptions();
+        updateMetrics();
+        applyAllFilters();
+
+        showToast(`Successfully retrieved ${currentLeads.length} clinical leads!`, 'success');
+
+        if (window.innerWidth < 1024) {
+          document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
+        }
+
+      } catch (err) {
+        showToast('Error generating leads: ' + err.message, 'error');
+        emptyState.classList.remove('hidden');
+        resultsCount.textContent = 'Error Loading Leads';
+        resultsSubtext.textContent = 'Please check your connection and try again.';
+      } finally {
+        searchBtn.disabled = false;
+        mobileActionSearchBtn.disabled = false;
+        searchBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+        searchBtnText.textContent = 'Generate Clinical Leads';
+        loadingIndicator.classList.add('hidden');
+      }
+    }
+
+    searchBtn.addEventListener('click', executeSearch);
+    mobileActionSearchBtn.addEventListener('click', executeSearch);
+    emptyStateSearchBtn.addEventListener('click', () => {
+      stateSelect.value = 'MA';
+      executeSearch();
+    });
+    scrollToTopBtn.addEventListener('click', () => {
+      leadsList.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Build specialty chips for quick filtering
+    function buildSpecialtyFilterChips() {
+      const specCounts = {};
+      currentLeads.forEach(lead => {
+        const s = lead.specialty || 'Other';
+        specCounts[s] = (specCounts[s] || 0) + 1;
+      });
+
+      const chipsHtml = [
+        `<button type="button" data-spec="ALL" class="spec-chip active-chip px-3 py-1 rounded text-xs font-bold border border-blue-600 transition shrink-0">
+          All (${currentLeads.length})
+        </button>`
+      ];
+
+      Object.entries(specCounts).forEach(([spec, count]) => {
+        chipsHtml.push(`
+          <button type="button" data-spec="${escapeHtml(spec)}" class="spec-chip px-3 py-1 rounded text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition shrink-0">
+            ${escapeHtml(spec)} (${count})
+          </button>
+        `);
+      });
+
+      specialtyChipsContainer.innerHTML = chipsHtml.join('');
+
+      document.querySelectorAll('.spec-chip').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.spec-chip').forEach(c => c.classList.remove('active-chip'));
+          btn.classList.add('active-chip');
+          activeSpecialtyFilter = btn.getAttribute('data-spec');
+          applyAllFilters();
+        });
+      });
+    }
+
+    // Build state filter dropdown options from loaded leads
+    function buildStateFilterOptions() {
+      const stateCounts = {};
+      currentLeads.forEach(lead => {
+        const st = (lead.state || '').trim().toUpperCase() || 'OTHER';
+        stateCounts[st] = (stateCounts[st] || 0) + 1;
+      });
+
+      const options = [`<option value="ALL">All States (${currentLeads.length})</option>`];
+      Object.keys(stateCounts).sort().forEach(st => {
+        options.push(`<option value="${escapeHtml(st)}">${escapeHtml(st)} (${stateCounts[st]})</option>`);
+      });
+
+      stateFilter.innerHTML = options.join('');
+      stateFilter.value = 'ALL';
+    }
+
+    // Update Metrics
+    function updateMetrics() {
+      if (currentLeads.length === 0) {
+        metricsBar.classList.add('hidden');
+        return;
+      }
+      metricsBar.classList.remove('hidden');
+      metricTotal.textContent = currentLeads.length;
+
+      const phonesCount = currentLeads.filter(l => l.front_desk_phone && l.front_desk_phone.length > 5).length;
+      metricPhones.textContent = `${phonesCount} (${Math.round((phonesCount / currentLeads.length) * 100)}%)`;
+
+      const uniqueSpecs = new Set(currentLeads.map(l => l.specialty)).size;
+      metricSpecs.textContent = uniqueSpecs;
+
+      const facilitiesCount = currentLeads.filter(l => (l.type || '').includes('Facility')).length;
+      metricFacilities.textContent = facilitiesCount;
+    }
+
+    // Apply combined filters (search query + specialty chip + call status + state + shown status)
+    function applyAllFilters() {
+      const q = quickFilter.value.toLowerCase().trim();
+      const statusFilter = callStatusFilter.value;
+      const selectedState = stateFilter ? stateFilter.value : 'ALL';
+      const hideShown = hideShownResultsToggle ? hideShownResultsToggle.checked : false;
+      let hiddenCount = 0;
+
+      filteredLeads = currentLeads.filter(lead => {
+        // State filter
+        if (selectedState !== 'ALL' && (lead.state || '').toUpperCase() !== selectedState) {
+          return false;
+        }
+
+        if (activeSpecialtyFilter !== 'ALL' && lead.specialty !== activeSpecialtyFilter) {
+          return false;
+        }
+
+        const leadStatus = leadStatuses[lead.npi] || 'NEW';
+        if (statusFilter !== 'ALL' && leadStatus !== statusFilter) {
+          return false;
+        }
+
+        // Hide Shown Leads filter
+        if (hideShown && lead.is_previously_shown) {
+          hiddenCount++;
+          return false;
+        }
+
+        if (q) {
+          const matchName = lead.facility_name && lead.facility_name.toLowerCase().includes(q);
+          const matchCity = lead.city && lead.city.toLowerCase().includes(q);
+          const matchSpec = lead.specialty && lead.specialty.toLowerCase().includes(q);
+          const matchPhone = lead.front_desk_phone && lead.front_desk_phone.includes(q);
+          const matchContact = lead.official_contact && lead.official_contact.toLowerCase().includes(q);
+          const matchNpi = lead.npi && lead.npi.includes(q);
+          if (!matchName && !matchCity && !matchSpec && !matchPhone && !matchContact && !matchNpi) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      if (hiddenShownCountBadge) {
+        if (hiddenCount > 0) {
+          hiddenShownCountBadge.textContent = `${hiddenCount} hidden`;
+          hiddenShownCountBadge.classList.remove('hidden');
+        } else {
+          hiddenShownCountBadge.classList.add('hidden');
+        }
+      }
+
+      renderResults();
+    }
+
+    if (hideShownResultsToggle) {
+      hideShownResultsToggle.addEventListener('change', applyAllFilters);
+    }
+
+    if (clearShownHistoryBtn) {
+      clearShownHistoryBtn.addEventListener('click', () => {
+        if (confirm('Clear the history of previously seen leads? This will allow them to appear again in future searches.')) {
+          shownNpis.clear();
+          try {
+            localStorage.removeItem(STORAGE_SHOWN_KEY);
+          } catch (e) {}
+          updateShownBadges();
+          currentLeads.forEach(l => { l.is_previously_shown = false; });
+          applyAllFilters();
+          showToast('Seen leads history has been reset', 'info');
+        }
+      });
+    }
+
+    quickFilter.addEventListener('input', () => {
+      clearSearchBtn.classList.toggle('hidden', !quickFilter.value);
+      applyAllFilters();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      quickFilter.value = '';
+      clearSearchBtn.classList.add('hidden');
+      applyAllFilters();
+    });
+
+    stateFilter.addEventListener('change', applyAllFilters);
+    callStatusFilter.addEventListener('change', applyAllFilters);
+
+    // View Switching
+    viewCardsBtn.addEventListener('click', () => {
+      currentViewMode = 'cards';
+      viewCardsBtn.classList.add('bg-white', 'text-slate-900', 'border-slate-200');
+      viewCardsBtn.classList.remove('text-slate-600', 'border-transparent');
+      viewTableBtn.classList.remove('bg-white', 'text-slate-900', 'border-slate-200');
+      viewTableBtn.classList.add('text-slate-600', 'border-transparent');
+      renderResults();
+    });
+
+    viewTableBtn.addEventListener('click', () => {
+      currentViewMode = 'table';
+      viewTableBtn.classList.add('bg-white', 'text-slate-900', 'border-slate-200');
+      viewTableBtn.classList.remove('text-slate-600', 'border-transparent');
+      viewCardsBtn.classList.remove('bg-white', 'text-slate-900', 'border-slate-200');
+      viewCardsBtn.classList.add('text-slate-600', 'border-transparent');
+      renderResults();
+    });
+
+    // Render results in Cards or Table
+    function renderResults() {
+      leadsList.innerHTML = '';
+      leadsTableBody.innerHTML = '';
+
+      if (filteredLeads.length === 0) {
+        emptyState.classList.remove('hidden');
+        leadsPillBadge.classList.add('hidden');
+        exportExcelBtn.disabled = true;
+        exportCsvBtn.disabled = true;
+        leadsCardWrapper.classList.add('hidden');
+        leadsTableContainer.classList.add('hidden');
+
+        if (currentLeads.length > 0) {
+          resultsCount.textContent = '0 Matches';
+          resultsSubtext.textContent = 'No leads match the current filters. Clear your search or change filters.';
+        } else {
+          resultsCount.textContent = '0 Leads Loaded';
+          resultsSubtext.textContent = 'Select target state & specialties, then click Generate.';
+        }
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      filterBar.classList.remove('hidden');
+      leadsPillBadge.classList.remove('hidden');
+      exportExcelBtn.disabled = false;
+      exportCsvBtn.disabled = false;
+      scrollerCountBadge.textContent = `${filteredLeads.length} Leads`;
+
+      const selectedOption = stateSelect.options[stateSelect.selectedIndex];
+      const stateName = selectedOption?.value === 'ALL' ? 'All Target States' : (selectedOption?.text?.split(' ')[0] || 'Selected State');
+      resultsCount.textContent = `${filteredLeads.length} Leads`;
+      resultsSubtext.textContent = `Showing verified healthcare providers in ${stateName}`;
+
+      if (currentViewMode === 'cards') {
+        leadsCardWrapper.classList.remove('hidden');
+        leadsTableContainer.classList.add('hidden');
+        renderCardsView();
+      } else {
+        leadsCardWrapper.classList.add('hidden');
+        leadsTableContainer.classList.remove('hidden');
+        renderTableView();
+      }
+    }
+
+    // Render Cards View (Flat)
+    function renderCardsView() {
+      filteredLeads.forEach((lead) => {
+        const card = document.createElement('div');
+        const leadStatus = leadStatuses[lead.npi] || 'NEW';
+        
+        const statusBadgeClasses = {
+          'NEW': 'bg-slate-100 text-slate-700 border-slate-300',
+          'CALLED': 'bg-emerald-50 text-emerald-800 border-emerald-300',
+          'CALLBACK': 'bg-amber-50 text-amber-800 border-amber-300',
+          'DEMO': 'bg-indigo-50 text-indigo-800 border-indigo-300',
+          'SKIP': 'bg-rose-50 text-rose-800 border-rose-300',
+        }[leadStatus] || 'bg-slate-100 text-slate-700 border-slate-300';
+
+        card.className = 'lead-card bg-white p-4 sm:p-5 rounded-lg border border-slate-200 hover:border-slate-300 transition space-y-3.5';
+        
+        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lead.facility_name} ${lead.street_address} ${lead.city} ${lead.state} ${lead.zip_code}`)}`;
+        const cleanPhone = (lead.front_desk_phone || '').replace(/[^0-9+]/g, '');
+
+        card.innerHTML = `
+          <!-- Card Header & Badges -->
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 border-b border-slate-200 pb-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 flex-wrap mb-1.5">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                  ${escapeHtml(lead.specialty)}
+                </span>
+                ${lead.is_previously_shown ? `
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                    <svg class="w-3 h-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Previously Shown</span>
+                  </span>
+                ` : `
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span>New Lead</span>
+                  </span>
+                `}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                  ${escapeHtml(lead.type || 'Practice')}
+                </span>
+                <button type="button" class="copy-npi-btn inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition" data-npi="${escapeHtml(lead.npi)}" title="Click to copy NPI">
+                  <span>NPI: ${escapeHtml(lead.npi)}</span>
+                  <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </div>
+
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-snug">
+                ${escapeHtml(lead.facility_name)}
+              </h3>
+
+              <!-- Address & Map Link -->
+              <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 flex-wrap">
+                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>${escapeHtml(lead.street_address)}, ${escapeHtml(lead.city)}, ${escapeHtml(lead.state)} ${escapeHtml(lead.zip_code)}</span>
+                <span class="text-slate-300">•</span>
+                <a href="${mapUrl}" target="_blank" rel="noopener" class="text-blue-600 hover:underline font-semibold inline-flex items-center gap-0.5">
+                  <span>Maps</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- Primary Phone & Call Status Selector -->
+            <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 pt-1 sm:pt-0">
+              ${cleanPhone ? `
+                <div class="flex items-center gap-1.5">
+                  <a href="tel:${cleanPhone}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm rounded border border-emerald-700 transition touch-target">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    <span>${escapeHtml(lead.front_desk_phone)}</span>
+                  </a>
+                  <button type="button" class="copy-phone-btn p-1.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition touch-target" data-phone="${escapeHtml(lead.front_desk_phone)}" title="Copy Phone Number">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  </button>
+                </div>
+              ` : `
+                <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 text-slate-400 border border-slate-200">
+                  No Phone Listed
+                </span>
+              `}
+
+              <!-- Call Status Dropdown -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] uppercase font-bold text-slate-500">Status:</span>
+                <select class="lead-status-select bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold ${statusBadgeClasses} focus:outline-none" data-npi="${escapeHtml(lead.npi)}">
+                  <option value="NEW" ${leadStatus === 'NEW' ? 'selected' : ''}>To Call</option>
+                  <option value="CALLED" ${leadStatus === 'CALLED' ? 'selected' : ''}>Spoke / Sent Info</option>
+                  <option value="CALLBACK" ${leadStatus === 'CALLBACK' ? 'selected' : ''}>Call Back Later</option>
+                  <option value="DEMO" ${leadStatus === 'DEMO' ? 'selected' : ''}>Demo Booked</option>
+                  <option value="SKIP" ${leadStatus === 'SKIP' ? 'selected' : ''}>Not Interested</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Decision Maker & Target Contact -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div>
+              <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">Ask Front Desk For:</span>
+              <p class="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>${escapeHtml(lead.target_person_to_ask || 'Practice Administrator')}</span>
+              </p>
+            </div>
+            <div>
+              <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">Authorized Official:</span>
+              <p class="font-medium text-slate-700 mt-0.5 truncate">
+                ${escapeHtml(lead.official_contact || 'Listed Provider')}
+              </p>
+            </div>
+          </div>
+
+          <!-- AI Pitch Script Box -->
+          <div class="bg-indigo-50/40 p-3.5 rounded-lg border border-indigo-200 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <span>Front Desk Cold Call Opener</span>
+              </div>
+              <button type="button" class="copy-script-btn inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-indigo-700 font-bold text-xs border border-indigo-300 active:bg-slate-100 transition touch-target" data-script="${escapeHtml(lead.calling_script)}">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Copy Script</span>
+              </button>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-800 italic leading-relaxed bg-white p-2.5 rounded border border-indigo-200">
+              "${escapeHtml(lead.calling_script)}"
+            </p>
+            <div class="text-xs text-slate-600 pt-0.5 flex items-center gap-1.5">
+              <strong class="text-slate-700">Billing Focus:</strong>
+              <span class="truncate">${escapeHtml(lead.purpose_of_contact)}</span>
+            </div>
+          </div>
+        `;
+
+        leadsList.appendChild(card);
+      });
+
+      attachCardEventHandlers();
+    }
+
+    // Render Table View (Flat)
+    function renderTableView() {
+      filteredLeads.forEach((lead) => {
+        const row = document.createElement('tr');
+        const leadStatus = leadStatuses[lead.npi] || 'NEW';
+        const cleanPhone = (lead.front_desk_phone || '').replace(/[^0-9+]/g, '');
+
+        row.className = 'hover:bg-slate-50 transition border-b border-slate-200';
+        row.innerHTML = `
+          <td class="py-2.5 px-3">
+            <select class="lead-status-select bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold" data-npi="${escapeHtml(lead.npi)}">
+              <option value="NEW" ${leadStatus === 'NEW' ? 'selected' : ''}>To Call</option>
+              <option value="CALLED" ${leadStatus === 'CALLED' ? 'selected' : ''}>Contacted</option>
+              <option value="CALLBACK" ${leadStatus === 'CALLBACK' ? 'selected' : ''}>Callback</option>
+              <option value="DEMO" ${leadStatus === 'DEMO' ? 'selected' : ''}>Demo</option>
+              <option value="SKIP" ${leadStatus === 'SKIP' ? 'selected' : ''}>Skip</option>
+            </select>
+          </td>
+          <td class="py-2.5 px-3">
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-slate-900">${escapeHtml(lead.facility_name)}</span>
+              ${lead.is_previously_shown ? `
+                <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">Shown</span>
+              ` : `
+                <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">New</span>
+              `}
+            </div>
+            <div class="text-[11px] font-mono text-slate-500">NPI: ${escapeHtml(lead.npi)}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+              ${escapeHtml(lead.specialty)}
+            </span>
+          </td>
+          <td class="py-2.5 px-3">
+            ${cleanPhone ? `
+              <a href="tel:${cleanPhone}" class="font-bold text-emerald-700 hover:underline">
+                ${escapeHtml(lead.front_desk_phone)}
+              </a>
+            ` : `<span class="text-slate-400">None</span>`}
+          </td>
+          <td class="py-2.5 px-3">
+            <div class="font-semibold text-slate-800 text-xs">${escapeHtml(lead.target_person_to_ask || 'Practice Administrator')}</div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(lead.official_contact || '')}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <span class="text-xs text-slate-600">${escapeHtml(lead.city)}, ${escapeHtml(lead.state)}</span>
+          </td>
+          <td class="py-2.5 px-3">
+            <button type="button" class="copy-script-btn px-2.5 py-1 bg-white hover:bg-slate-100 text-blue-700 font-bold rounded text-xs border border-slate-300 transition" data-script="${escapeHtml(lead.calling_script)}">
+              Copy Script
+            </button>
+          </td>
+        `;
+
+        leadsTableBody.appendChild(row);
+      });
+
+      attachCardEventHandlers();
+    }
+
+    // Attach click and change listeners to rendered cards/rows
+    function attachCardEventHandlers() {
+      // Copy script
+      document.querySelectorAll('.copy-script-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const script = btn.getAttribute('data-script');
+          copyToClipboard(script, 'Phone script copied to clipboard!');
+        });
+      });
+
+      // Copy phone
+      document.querySelectorAll('.copy-phone-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const phone = btn.getAttribute('data-phone');
+          copyToClipboard(phone, `Copied phone: ${phone}`);
+        });
+      });
+
+      // Copy NPI
+      document.querySelectorAll('.copy-npi-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const npi = btn.getAttribute('data-npi');
+          copyToClipboard(npi, `Copied NPI: ${npi}`);
+        });
+      });
+
+      // Status change select
+      document.querySelectorAll('.lead-status-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const npi = sel.getAttribute('data-npi');
+          const newStatus = e.target.value;
+          saveLeadStatus(npi, newStatus);
+          showToast(`Updated status to ${newStatus}`, 'info');
+        });
+      });
+    }
+
+    // Export Excel
+    exportExcelBtn.addEventListener('click', async () => {
+      if (filteredLeads.length === 0) return;
+      exportExcelBtn.disabled = true;
+      showToast('Generating Excel sheet...', 'info');
+
+      try {
+        const res = await fetch('/api/leads/export/excel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leads: filteredLeads })
+        });
+        
+        if (!res.ok) throw new Error('Failed to generate Excel file');
+
+        const blob = await res.blob();
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const stateCode = stateSelect.value;
+        downloadBlob(blob, `clinical_leads_${stateCode}_${dateStr}.xlsx`);
+        showToast('Excel workbook exported successfully!', 'success');
+      } catch (err) {
+        showToast('Export failed: ' + err.message, 'error');
+      } finally {
+        exportExcelBtn.disabled = false;
+      }
+    });
+
+    // Export CSV
+    exportCsvBtn.addEventListener('click', async () => {
+      if (filteredLeads.length === 0) return;
+      exportCsvBtn.disabled = true;
+      showToast('Generating CSV file...', 'info');
+
+      try {
+        const res = await fetch('/api/leads/export/csv', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leads: filteredLeads })
+        });
+
+        if (!res.ok) throw new Error('Failed to generate CSV file');
+
+        const blob = await res.blob();
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const stateCode = stateSelect.value;
+        downloadBlob(blob, `clinical_leads_${stateCode}_${dateStr}.csv`);
+        showToast('CSV exported successfully!', 'success');
+      } catch (err) {
+        showToast('Export failed: ' + err.message, 'error');
+      } finally {
+        exportCsvBtn.disabled = false;
+      }
+    });
+
+    function downloadBlob(blob, filename) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Start App
+    init();
+  </script>
+</body>
+</html>

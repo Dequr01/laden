@@ -1,0 +1,22 @@
+# Secrets and environment variables
+.env
+*.env
+
+# Python virtual environment
+venv/
+env/
+.venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data & Test Exports
+test_leads.xlsx
+*.xlsx
+*.csv
+
+# OS generated
+.DS_Store
+Thumbs.db
