@@ -147,7 +147,7 @@ export async function searchLeadsForSpecialty(
     if (leads.length >= limit) break;
 
     let skip = 0;
-    let maxPages = Math.max(6, Math.floor(limit / 15) + 3);
+    let maxPages = Math.max(6, Math.ceil(1200 / fetchLimit));
 
     while (leads.length < limit && maxPages > 0) {
       maxPages--;
@@ -197,7 +197,7 @@ export async function searchLeadsForSpecialty(
         }
 
         skip += results.length;
-        if (results.length < fetchLimit) break;
+        if (results.length < fetchLimit || skip > 1000) break;
 
       } catch (err) {
         console.error(`Error querying NPPES for ${specialtyKey} (${etype}):`, err.message);

@@ -230,6 +230,7 @@
                   <option value="20">20 leads per specialty (Deep Reach)</option>
                   <option value="50">50 leads per specialty (Full Territory)</option>
                   <option value="100">100 leads per specialty (High Volume)</option>
+                  <option value="2400">API Max (Up to 2,400 per specialty)</option>
                   <option value="custom">Custom count (Enter exact number)...</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
@@ -245,13 +246,13 @@
                   <label for="customLimitInput" class="text-xs font-bold text-slate-700">
                     Exact Lead Count:
                   </label>
-                  <span class="text-[10px] text-slate-500">1 – 250 per specialty</span>
+                  <span class="text-[10px] text-slate-500">1 – 2,400 (API Max)</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <button type="button" id="decrementLimitBtn" class="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-sm transition touch-target">
                     -
                   </button>
-                  <input type="number" id="customLimitInput" min="1" max="250" value="15" class="flex-1 bg-white border border-slate-300 hover:border-slate-400 focus:border-blue-600 rounded-lg px-3 py-1.5 text-center text-sm font-bold text-slate-900 focus:outline-none transition">
+                  <input type="number" id="customLimitInput" min="1" max="2400" value="15" class="flex-1 bg-white border border-slate-300 hover:border-slate-400 focus:border-blue-600 rounded-lg px-3 py-1.5 text-center text-sm font-bold text-slate-900 focus:outline-none transition">
                   <button type="button" id="incrementLimitBtn" class="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-sm transition touch-target">
                     +
                   </button>
@@ -261,8 +262,10 @@
                   <span class="text-[10px] font-semibold text-slate-500">Quick:</span>
                   <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="15">15</button>
                   <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="25">25</button>
-                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="75">75</button>
                   <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="150">150</button>
+                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="500">500</button>
+                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="1200">1200</button>
+                  <button type="button" class="preset-limit-pill px-2 py-0.5 rounded text-[11px] font-bold bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 border border-slate-300 transition" data-val="2400">Max (2400)</button>
                 </div>
               </div>
             </div>
@@ -766,7 +769,7 @@
 
     // Get currently active lead limit (preset or custom)
     function getEffectiveLimit() {
-      return !limitSelect ? 0xa : limitSelect.value === 'custom' ? Math.max(1, Math.min(0xfa, (parseInt(customLimitInput?.value ?? '15', 10) || 1))) : (parseInt(limitSelect.value, 10) || 0xa);
+      return !limitSelect ? 0xa : limitSelect.value === 'custom' ? Math.max(1, Math.min(0x960, (parseInt(customLimitInput?.value ?? '15', 10) || 1))) : (parseInt(limitSelect.value, 10) || 0xa);
     }
 
     function updateLimitDisplay() {
@@ -892,7 +895,7 @@
     if (incrementLimitBtn && customLimitInput) {
       incrementLimitBtn.addEventListener('click', () => {
         let val = parseInt(customLimitInput.value, 10) || 15;
-        val = Math.min(250, val + 5);
+        val = Math.min(2400, val + 5);
         customLimitInput.value = val;
         updateLimitDisplay();
       });
