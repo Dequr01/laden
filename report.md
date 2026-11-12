@@ -3,7 +3,7 @@
 **Application Version:** 2.0 (Flat Light Theme & Mobile-First Edition)  
 **Data Authority:** US Centers for Medicare & Medicaid Services (CMS) NPPES Federal Registry  
 **Enrichment Engine:** OpenAI (`gpt-4o-mini`) Revenue Cycle Management (RCM) Strategy  
-**Serving Layer:** FastAPI / Uvicorn / Responsive Vanilla JS + Tailwind CSS  
+**Serving Layer:** Node.js (Express) / Python (FastAPI) / Responsive Vanilla JS + Tailwind CSS  
 
 ---
 

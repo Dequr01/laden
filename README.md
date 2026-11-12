@@ -27,18 +27,24 @@ An office tool to search US medical providers, enrich them with front-desk calli
 
 ## How to Run
 
-### Option 1: Web Dashboard (Recommended)
+### Option 1: Web Dashboard with Node.js (Recommended)
 
-1. Activate environment:
+1. Install dependencies:
    ```bash
-   source venv/bin/activate
+   npm install
    ```
 2. Start the web app:
    ```bash
-   python main.py
+   npm start
    ```
+   *(or run `./start.sh`)*
 3. Open in your browser:
    **[http://localhost:8000](http://localhost:8000)**
+
+4. Run tests:
+   ```bash
+   npm test
+   ```
 
 ---
 
@@ -47,10 +53,10 @@ An office tool to search US medical providers, enrich them with front-desk calli
 Generate leads directly into an Excel file:
 
 ```bash
-# Example: 10 Orthopaedic leads in Massachusetts
-./venv/bin/python3 main.py --cli --state MA --specialty orthopaedic --limit 10 --output leads.xlsx
+# Node.js CLI:
+node server.js --cli --state MA --specialty orthopaedic --limit 10 --output leads.xlsx
 
-# Example: 20 Radiology leads in New York
-./venv/bin/python3 main.py --cli --state NY --specialty imaging_radiology --limit 20 --output ny_radiology.xlsx
+# Python CLI (alternative):
+python3 main.py --cli --state MA --specialty orthopaedic --limit 10 --output leads.xlsx
 ```
 
