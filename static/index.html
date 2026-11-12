@@ -217,9 +217,6 @@
 
             <!-- Leads Per Specialty -->
             <div>
-              <label for="limitSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Leads per Specialty
-              </label>
               <div class="flex items-center justify-between mb-1.5">
                 <label for="limitSelect" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Leads per Specialty
@@ -769,14 +766,7 @@
 
     // Get currently active lead limit (preset or custom)
     function getEffectiveLimit() {
-      if (!limitSelect) return 10;
-      if (limitSelect.value === 'custom') {
-        let val = parseInt(customLimitInput ? customLimitInput.value : '15', 10);
-        if (isNaN(val) || val < 1) val = 1;
-        if (val > 250) val = 250;
-        return val;
-      }
-      return parseInt(limitSelect.value, 10) || 10;
+      return !limitSelect ? 0xa : limitSelect.value === 'custom' ? Math.max(1, Math.min(0xfa, (parseInt(customLimitInput?.value ?? '15', 10) || 1))) : (parseInt(limitSelect.value, 10) || 0xa);
     }
 
     function updateLimitDisplay() {
@@ -800,7 +790,6 @@
 
       const selectedOption = stateSelect.options[stateSelect.selectedIndex];
       const stateName = selectedOption?.value === 'ALL' ? 'All States' : (selectedOption?.text?.split(' ')[0] || 'MA');
-      mobileSummaryText.textContent = `${stateName} • ${checkedCount} Specialties • ${limitSelect.value}/spec`;
       const limit = getEffectiveLimit();
       mobileSummaryText.textContent = `${stateName} • ${checkedCount} Specialties • ${limit}/spec`;
       if (effectiveLimitBadge) {
@@ -935,7 +924,6 @@
     // Main Lead Generation Search Action
     async function executeSearch() {
       const selectedState = stateSelect.value;
-      const limit = parseInt(limitSelect.value, 10);
       const limit = getEffectiveLimit();
       const aiEnrich = aiEnrichToggle.checked;
       const selectedSpecialties = Array.from(document.querySelectorAll('.spec-checkbox:checked')).map(cb => cb.value);

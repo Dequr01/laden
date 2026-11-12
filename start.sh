@@ -9,22 +9,18 @@ echo "=================================================="
 echo " Starting Clinical Lead Generator..."
 echo "=================================================="
 
-# Check for Node.js runtime (preferred) or Python
-if command -v node >/dev/null 2>&1 && [ -f "server.js" ]; then
-    echo "[*] Launching with Node.js runtime..."
-    RUN_CMD="node server.js"
-else
-    # Fallback to Python virtual environment
-    if [ ! -d "venv" ]; then
-        echo "[*] Creating virtual environment..."
-        python3 -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
+# Install Node dependencies if missing
+if [ ! -d "node_modules" ]; then
+    echo "[*] Installing Node.js dependencies..."
+    if command -v pnpm >/dev/null 2>&1; then
+        pnpm install
     else
-        source venv/bin/activate
+        npm install
     fi
-    RUN_CMD="python3 main.py"
 fi
+
+echo "[*] Launching with Node.js runtime..."
+RUN_CMD="node server.js"
 
 # Ensure port 8000 is free before starting
 EXISTING_PID=$(fuser $PORT/tcp 2>/dev/null)

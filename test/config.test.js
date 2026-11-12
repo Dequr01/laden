@@ -39,3 +39,4 @@ test('Config: SPECIALTIES has all required keys and properties', () => {
     assert.ok(s.ask_for, `${exp} must have ask_for`);
   }
 });
+

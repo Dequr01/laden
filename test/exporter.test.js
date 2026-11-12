@@ -69,3 +69,4 @@ test('Exporter: generateExcelBuffer produces valid Excel (.xlsx) file', async ()
   assert.equal(buffer[2], 0x03, 'Byte 2 should be 0x03');
   assert.equal(buffer[3], 0x04, 'Byte 3 should be 0x04');
 });
+

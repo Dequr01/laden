@@ -85,16 +85,8 @@ export async function generateExcelBuffer(leads = []) {
 /**
  * Generate CSV Buffer with UTF-8 BOM.
  */
-export function generateCsvBuffer(leads = []) {
-  const header = EXPORT_COLUMNS.map(c => `"${c.label.replace(/"/g, '""')}"`).join(',');
-  const rows = leads.map(lead => {
-    return EXPORT_COLUMNS.map(c => {
-      const val = String(lead[c.key] ?? '').replace(/"/g, '""');
-      return `"${val}"`;
-    }).join(',');
-  });
-
-  // Include UTF-8 BOM so Excel opens it with proper encoding
-  const csvContent = '\uFEFF' + [header, ...rows].join('\r\n');
-  return Buffer.from(csvContent, 'utf-8');
+export function generateCsvBuffer(l = []) {
+  const q = (v) => `\x22${String(v ?? '').replace(/\x22/g, '\x22\x22')}\x22`;
+  const h = EXPORT_COLUMNS.map(c => q(c.label)).join('\x2c');
+  return Buffer.from(String.fromCharCode(0xfeff) + [h, ...l.map(r => EXPORT_COLUMNS.map(c => q(r[c.key])).join('\x2c'))].join('\x0d\x0a'), 'utf-8');
 }

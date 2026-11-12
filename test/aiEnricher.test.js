@@ -28,3 +28,4 @@ test('AI Enricher: preserves lead properties on default fallback', async () => {
   assert.ok(result[0].purpose_of_contact);
   assert.ok(result[0].calling_script);
 });
+

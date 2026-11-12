@@ -9,26 +9,17 @@ export const NPPES_API_URL = 'https://npiregistry.cms.hhs.gov/api/';
 /**
  * Helper to convert strings to Title Case.
  */
-export function toTitleCase(str) {
-  if (!str) return '';
-  return String(str)
-    .toLowerCase()
-    .replace(/\b([a-z])/g, (_, ch) => ch.toUpperCase())
-    .trim();
+export function toTitleCase(s) {
+  return s ? String(s).toLowerCase().replace(/\b([a-z])/g, (_, c) => String.fromCharCode(c.charCodeAt(0) ^ 0x20)).trim() : '';
 }
 
 /**
  * Format 10-digit phone number as (XXX) XXX-XXXX.
  */
-export function formatPhone(phoneRaw) {
-  if (!phoneRaw) return '';
-  const digits = String(phoneRaw).replace(/\D/g, '');
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  } else if (digits.length === 11 && digits.startsWith('1')) {
-    return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
-  }
-  return String(phoneRaw).trim();
+export function formatPhone(p) {
+  if (!p) return '';
+  const d = String(p).replace(/\D/g, ''), n = d.length;
+  return (n === 10 || (n === 11 && d.charCodeAt(0) === 0x31)) ? ((o) => `\x28${d.slice(o, o + 3)}\x29 ${d.slice(o + 3, o + 6)}\x2d${d.slice(o + 6)}`)(n & 1) : String(p).trim();
 }
 
 /**

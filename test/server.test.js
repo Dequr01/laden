@@ -1,6 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'http';
+import vm from 'node:vm';
 import { app } from '../server.js';
 
 let server;
@@ -28,6 +29,13 @@ test('Server: GET / serves HTML single-page application', async () => {
   assert.ok(html.includes('Clinical & Medical Practice Lead Generator') || html.includes('LeadPulse'));
   assert.ok(html.includes('id="stateSelect"'));
   assert.ok(html.includes('id="limitSelect"'));
+
+  // Validate all inline <script> blocks have zero JS syntax errors
+  const scriptMatches = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  assert.ok(scriptMatches.length >= 1, 'Expected at least one inline script block');
+  for (const match of scriptMatches) {
+    assert.doesNotThrow(() => new vm.Script(match[1]), 'Inline JS must have valid syntax');
+  }
 });
 
 test('Server: GET /api/config returns states and specialties', async () => {
@@ -112,3 +120,4 @@ test('Server: POST /api/leads/export/csv returns valid CSV stream', async () => 
   assert.ok(text.includes('Test Surgery Center'));
   assert.ok(text.includes('1234567890'));
 });
+

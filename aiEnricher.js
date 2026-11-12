@@ -73,7 +73,7 @@ Respond with JSON only, no markdown ticks.
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are a specialized medical sales assistant. Return strictly valid JSON.' },
+          { role: 'system', content: 'You are a specialized sales assistant. Return strictly valid JSON.' },
           { role: 'user', content: prompt },
         ],
         temperature: 0.4,

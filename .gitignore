@@ -1,6 +1,7 @@
-# Node.js dependencies
+# Node.js dependencies and builds
 node_modules/
 package-lock.json
+dist/
 
 # Secrets and environment variables
 .env
