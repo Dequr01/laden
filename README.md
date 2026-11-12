@@ -56,7 +56,5 @@ Generate leads directly into an Excel file:
 # Node.js CLI:
 node server.js --cli --state MA --specialty orthopaedic --limit 10 --output leads.xlsx
 
-# Python CLI (alternative):
-python3 main.py --cli --state MA --specialty orthopaedic --limit 10 --output leads.xlsx
 ```
 
